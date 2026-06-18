@@ -1,41 +1,42 @@
-# Sigma Agent Engineering — 企业 AI Agent 工程化 Skill 套件
+# Sigma Agent Engineering
 
-> Assemble a fluent-but-unreliable LLM into a **controllable, auditable, self-improving enterprise digital worker** — a 7-skill [Claude Code](https://claude.com/claude-code) suite implementing the *Sigma Engineering* methodology from the book **《企业 AI Agent：从聊天框到数字员工》**.
+**English** | [简体中文](./README.zh-CN.md)
 
-把一个**会说话但不稳定的大模型**，按质量工程这门学科装配成**可控、可审计、运行中持续自我迭代**的企业级数字作业系统。本套件是专著《企业 AI Agent：从聊天框到数字员工》(Sigma Engineering 范式) 的方法论落地，做成可直接被 Claude Code 调用的 7 个 skill。
+> Assemble a fluent-but-unreliable LLM into a **controllable, auditable, continuously self-improving enterprise digital worker** — a 7-skill suite for [Claude Code](https://claude.com/claude-code) that operationalizes the *Sigma Engineering* methodology from the book **《企业 AI Agent：从聊天框到数字员工》** (*Enterprise AI Agents: From Chatbox to Digital Worker*).
 
-主线一句话：**`R ≈ ∏ pᵢ`** —— 任务整体可靠度是单步可靠度的连乘。每步 95%、跑 20 步，整体只剩约 `0.95²⁰ ≈ 0.36`。要把这条曲线抬起来，只有三件事可做：抬高单步可靠度、缩短步数、给失败兜底封顶。这套 skill 就是把这件事工程化。
+This suite takes the discipline of **quality engineering** (Six Sigma, Lean, Theory of Constraints, reliability engineering) and uses it to *build and govern the agent itself* — not to make an agent run Six Sigma, but to engineer a fluent-but-unreliable LLM into a dependable digital operating system.
+
+**The mainline in one line: `R ≈ ∏ pᵢ`** — a task's overall reliability is the *product* of its per-step reliabilities. At 95% per step over 20 steps, you keep only `0.95²⁰ ≈ 0.36`. There are exactly three things you can do to lift that curve, and this suite operationalizes all three.
 
 ---
 
-## 套件构成（1 主编排器 + 6 子 skill）
+## What's in the suite (1 orchestrator + 6 sub-skills)
 
-| Skill | 职责 | 管辖阶段 |
+| Skill | Responsibility | Pipeline stages |
 |---|---|---|
-| **`sigma-agent-engineering`** | 端到端主编排器：把 6 个子 skill 焊成一条「两速控制流水线」，按任务本性分诊路由 | P0–P11 全流程 |
-| `enterprise-agent-assessment` | 立项分诊 / 可行性评估 / CDOC Concept 与能力门 | P0 / P5 |
-| `agent-control-plane-design` | 三层控制面（指令/信息/运行治理）+ MCP 接入 + 沙盒 + 编排 | P1–P4 |
-| `agent-guardrails-config` | 第一道防线 Safety-I 结构化护栏 + 第三道防线记忆/权限/知识代谢 | P6 |
-| `agent-human-loop-design` | 第二道防线：按**可逆性**（非置信度）放行的人工复核可逆门 | P6 |
-| `agent-observability-setup` | 独立测量总线 + 可观测性 + 评估成本 + DMAIC 判例飞轮 | P7–P10 |
-| `agent-production-gate` | 规模化生产准入：五步准入（能力门先于流量门）+ 合规 + 三组看板 | P11 |
+| **`sigma-agent-engineering`** | End-to-end **orchestrator**: welds the 6 sub-skills into one "two-speed control pipeline" and routes by the nature of the task | P0–P11 (full pipeline) |
+| `enterprise-agent-assessment` | Project intake & triage / feasibility / CDOC Concept & capability gate | P0 / P5 |
+| `agent-control-plane-design` | Three-layer control plane (instruction / information / runtime governance) + MCP access + sandbox + orchestration | P1–P4 |
+| `agent-guardrails-config` | First line of defense (Safety-I structured guardrails) + third line (memory / permissions / knowledge metabolism) | P6 |
+| `agent-human-loop-design` | Second line of defense: human-review **reversibility gate**, gated by *reversibility* — not confidence | P6 |
+| `agent-observability-setup` | Independent measurement bus + observability + evaluation/cost + DMAIC case-law flywheel | P7–P10 |
+| `agent-production-gate` | Scale-up go-live: five-step admission (capability gate before traffic gate) + compliance + three dashboards | P11 |
 
-> 主 skill 持有四份共享底稿（术语 canon、阶段流水线、方法论账本、两条贯穿案例），保证 6 个子 skill 引用同一套口径。细节走渐进式披露，下沉到 `sigma-agent-engineering/reference/`。
+> The orchestrator holds four shared canonical drafts (terminology canon, phase pipeline, methodology ledger, two end-to-end case studies) so all 6 sub-skills speak the same dialect. Details follow progressive disclosure, pushed down into `sigma-agent-engineering/reference/`.
 
-## 核心方法论（4 个不可简化的锚）
+## Core methodology (4 anchors you must not over-simplify)
 
-1. **`R ≈ pⁿ`（主线）** — 真实写法是条件概率连乘 `R = ∏ pᵢ`；`pⁿ` 只是建立直觉的乐观基线，真实衰减因 self-conditioning 更陡。
-2. **两速控制系统** — 快内环（执行/驾驭工程，压方差）+ 慢外环（DMAIC/改进，固化永久门禁）+ 中间独立测量总线耦合。
-3. **三手段** — 抬高单步可靠度 base p / 缩短步数 N / 给失败兜底封顶 ⊓（Safety-I + Safety-II）。
-4. **正交轴 II（信任与遏制）** — 对付提示词注入/越权的独立轴，不是 `pⁿ` 随机误差；核心是别让一个 Agent 同时握私有数据 + 读不可信内容 + 对外发送（**致命三联**）。
+1. **`R ≈ pⁿ` (the mainline)** — the real form is a conditional-probability product `R = ∏ pᵢ`; `pⁿ` is only an *optimistic baseline* for intuition. Real decay is steeper because of self-conditioning error propagation.
+2. **Two-speed control system** — a fast inner loop (execution / "harness engineering," which crushes variance) + a slow outer loop (DMAIC / improvement, which freezes real failures into permanent gates) + an **independent measurement bus** coupling the two.
+3. **Three levers** — raise per-step base reliability `p` / shorten step count `N` / cap failures with a floor `⊓` (Safety-I to catch foreseeable failure + Safety-II to degrade gracefully).
+4. **Orthogonal Axis II (Trust & Containment)** — an *independent* axis for adversarial threats (prompt injection / privilege escalation); it is **not** `pⁿ` random error. The core rule: never let one agent simultaneously hold private data + read untrusted content + have an outbound channel (the **lethal trifecta**).
 
-## 安装
+## Installation
 
-把这 7 个目录复制到你的 Claude Code skills 目录：
+Copy the 7 skill directories into your Claude Code skills folder:
 
 ```bash
-# 克隆后，把 7 个 skill 目录拷进 ~/.claude/skills/
-git clone <this-repo-url> sigma-agent-engineering-suite
+git clone https://github.com/lssmi/sigma-agent-engineering-suite.git
 cp -R sigma-agent-engineering-suite/sigma-agent-engineering \
       sigma-agent-engineering-suite/enterprise-agent-assessment \
       sigma-agent-engineering-suite/agent-control-plane-design \
@@ -46,25 +47,25 @@ cp -R sigma-agent-engineering-suite/sigma-agent-engineering \
       ~/.claude/skills/
 ```
 
-之后在 Claude Code 里提到「企业 Agent 工程化 / 数字员工 / 从立项到生产 / Sigma Engineering / R≈pⁿ」等即可触发主编排器；它会按任务本性路由到对应子 skill，或直接放行轻量任务（不强制走全程）。
+Then, in Claude Code, mention things like *"enterprise agent engineering / digital worker / from project to production / Sigma Engineering / R≈pⁿ / agent reliability engineering"* to trigger the orchestrator. It routes to the right sub-skill by the nature of the task — or lets lightweight tasks through directly (it does **not** force every task through the full pipeline).
 
-## 示例
+## Examples
 
-`sigma-agent-engineering/examples/` 含两个**过程可视化**演示与一次 QFD×跨模型对抗评审走查：
+`sigma-agent-engineering/examples/` contains two **process-visualization** demos plus a QFD × cross-model adversarial-review walkthrough:
 
-- `8d-run.html` — 制造业 8D 诊断 Agent 沿 P0–P11 走一圈的过程图
-- `qfd-walkthrough.html` — 用 QFD 设计「数字质量工程师 Agent」的四阶段 AB 角互换评审
-- `qfd-digital-qe-agent/` — 上述走查的逐阶段产物与 Codex 评审记录
+- `8d-run.html` — a manufacturing 8D diagnostic agent walking the full P0–P11 loop
+- `qfd-walkthrough.html` — designing a "digital quality engineer" agent via the four QFD phases with role-swapped review
+- `qfd-digital-qe-agent/` — the per-phase artifacts and Codex review records of that walkthrough
 
-> ⚠️ **所有示例数据均为模拟/示例值**，用于演示流水线机制与门禁，非真实生产数据。
+> ⚠️ **All example data is simulated / illustrative**, used to demonstrate pipeline mechanics and gates — not real production data.
 
-## 来源、授权与边界
+## Provenance, license & boundaries
 
-- **方法论来源**：本套件的方法论提炼自专著《企业 AI Agent：从聊天框到数字员工》(范玉辉, Sigma Engineering 范式)。作者作为权利人，将本 **skill 实现**以 MIT 协议开源。
-- **授权边界**：MIT 协议覆盖本仓的 **skill 代码与结构**（SKILL.md / reference 编排 / 示例）。书面专著正文本身的著作权另行保留——本套件是方法论的工程化落地，不是书的全文复制。
-- **作者本地核验源**：仓内多处提到「八审清样 `/tmp/book8/`」是作者本机的书稿底稿，**未随本仓发布、外部用户也无需访问**。需要核对数值/章节时，以仓内 `reference/` 各文件已核验台账 + 正式出版书为准。
-- **非官方关联**：本项目是面向 Claude Code 的第三方 skill 套件，与 Anthropic 无隶属关系。
-- **免责**：方法论与示例仅供工程参考，不构成对任何具体生产系统可靠性、合规性或安全性的保证；落地请结合自身环境验证。
+- **Methodology source.** The methodology is distilled from the book *Enterprise AI Agents: From Chatbox to Digital Worker* (《企业 AI Agent：从聊天框到数字员工》) by **Fan Yuhui (范玉辉)**, Sigma Engineering paradigm. As the rights holder, the author releases this **skill implementation** under the MIT License.
+- **License boundary.** The MIT License covers the **skill code and structure** in this repo (SKILL.md / reference orchestration / examples). Copyright in the book's prose itself is reserved separately — this suite is an engineering implementation of the methodology, not a reproduction of the book.
+- **Author-local verification source.** Several files mention "八审清样 `/tmp/book8/`," which are the author's local manuscript drafts — **not shipped with this repo and not needed by external users**. To verify figures or chapter structure, rely on the in-repo `reference/` verified ledgers plus the published book.
+- **Not affiliated.** This is a third-party skill suite for Claude Code, not affiliated with Anthropic.
+- **Disclaimer.** The methodology and examples are for engineering reference only and constitute no guarantee of the reliability, compliance, or security of any specific production system. Validate against your own environment before deploying.
 
 ## License
 
