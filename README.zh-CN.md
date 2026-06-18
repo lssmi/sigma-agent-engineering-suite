@@ -1,39 +1,65 @@
-# Sigma Agent Engineering — 企业 AI Agent 工程化 Skill 套件
+<div align="center">
+
+![Sigma Agent Engineering](./assets/hero.png)
 
 [English](./README.md) | **简体中文**
 
-> 把一个**会说话但不稳定的大模型**，按质量工程这门学科装配成**可控、可审计、运行中持续自我迭代**的企业级数字作业系统 —— 一个面向 [Claude Code](https://claude.com/claude-code) 的 7-skill 套件，落地专著《企业 AI Agent：从聊天框到数字员工》(Sigma Engineering 范式) 的方法论。
+[![license](https://img.shields.io/badge/license-MIT-0f766e)](./LICENSE)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-skill_suite-d97757)](https://claude.com/claude-code)
+![skills](https://img.shields.io/badge/skills-7-0f172a)
+![methodology](https://img.shields.io/badge/Sigma_Engineering-R%E2%89%88%E2%88%8Fp%E1%B5%A2-334155)
+![PRs](https://img.shields.io/badge/PRs-welcome-b45309)
 
-本套件把质量工程（六西格玛/精益/约束理论/可靠性工程）反过来用于**建造和治理 Agent 本身** —— 不是让 Agent 去跑六西格玛，而是用这门学科把一个会说话但不稳定的大模型，工程化成可靠的数字作业系统。
+**把一个会说话但不稳定的大模型，装配成可控、可审计、运行中持续自我迭代的企业级数字作业系统。**
+一个面向 [Claude Code](https://claude.com/claude-code) 的 7-skill 套件，落地《企业 AI Agent：从聊天框到数字员工》(Sigma Engineering 范式) 的方法论。
 
-主线一句话：**`R ≈ ∏ pᵢ`** —— 任务整体可靠度是单步可靠度的连乘。每步 95%、跑 20 步，整体只剩约 `0.95²⁰ ≈ 0.36`。要把这条曲线抬起来，只有三件事可做，这套 skill 就是把这三件事工程化。
+</div>
 
 ---
 
-## 套件构成（1 主编排器 + 6 子 skill）
+## 它解决什么问题
 
-| Skill | 职责 | 管辖阶段 |
+一个在聊天框里对答如流的大模型，**不是**你能放上生产线的工人。真实任务不是一个聪明回答，而是一条二十步的链 —— 而**可靠度是乘出来的，不是加出来的**：
+
+> ### `R ≈ ∏ pᵢ`  →  `0.95²⁰ ≈ 0.36`
+
+每步 95%、跑 20 步，整体只剩约**三分之一**。更糟的是，真实衰减比 `pⁿ` 还陡 —— 因为错误会顺着链条向下游 self-condition。
+
+大多数团队只接了执行环、上线一个台上能跑的 demo，然后：**生产会崩，崩了无从定位。** 这不是 prompt 问题，是**可靠性工程**问题。这套 skill 给你完整流水线，像质量工程抬一条产线那样，把这条曲线抬起来。
+
+## 怎么运作 —— 两速控制系统
+
+![两速控制流水线](./assets/pipeline.png)
+
+- **快内环（P1–P6）** —— 执行 / *驾驭工程*。压方差、每步过门禁。不学习、不反思，只管放行或拦截。
+- **慢外环（P8–P11）** —— DMAIC 改进。把每个真实失败固化成**永久**门禁，同一个 bug 永远不会上线第二次。
+- **独立测量总线（P7）** —— 耦合两环的真理源，**独立于被测对象**测量（拒绝自证预言的绿测试）。
+- **判例飞轮** —— `Control → Define`：每次修复都成为系统带得走的资产。
+
+你能对这条 `∏ pᵢ` 曲线做的，只有三件事：**抬高单步可靠度**、**缩短步数**（把确定逻辑剥给代码）、**给失败兜底封顶**（Safety-I 拦可预见失效 + Safety-II 优雅降级）。这套 skill 把三件事都工程化了。
+
+## 套件构成
+
+主**编排器**把 6 个聚焦的子 skill 焊成一条流水线，按任务本性路由 —— **不强制**每个任务都走完十二阶段。
+
+| Skill | 职责 | 阶段 |
 |---|---|---|
-| **`sigma-agent-engineering`** | 端到端主编排器：把 6 个子 skill 焊成一条「两速控制流水线」，按任务本性分诊路由 | P0–P11 全流程 |
-| `enterprise-agent-assessment` | 立项分诊 / 可行性评估 / CDOC Concept 与能力门 | P0 / P5 |
-| `agent-control-plane-design` | 三层控制面（指令/信息/运行治理）+ MCP 接入 + 沙盒 + 编排 | P1–P4 |
-| `agent-guardrails-config` | 第一道防线 Safety-I 结构化护栏 + 第三道防线记忆/权限/知识代谢 | P6 |
-| `agent-human-loop-design` | 第二道防线：按**可逆性**（非置信度）放行的人工复核可逆门 | P6 |
+| **`sigma-agent-engineering`** | 端到端**主编排器** —— 两速控制流水线 + 任务分诊 | P0–P11 |
+| `enterprise-agent-assessment` | 立项分诊 / 可行性 / CDOC Concept 与能力门 | P0 · P5 |
+| `agent-control-plane-design` | 三层控制面（指令/信息/运行治理）+ MCP + 沙盒 + 编排 | P1–P4 |
+| `agent-guardrails-config` | 第一道防线 Safety-I 结构化护栏 + 第三道防线（记忆·权限·知识代谢） | P6 |
+| `agent-human-loop-design` | 第二道防线 —— 人工复核，按**可逆性放行、非置信度** | P6 |
 | `agent-observability-setup` | 独立测量总线 + 可观测性 + 评估成本 + DMAIC 判例飞轮 | P7–P10 |
-| `agent-production-gate` | 规模化生产准入：五步准入（能力门先于流量门）+ 合规 + 三组看板 | P11 |
+| `agent-production-gate` | 规模化生产准入 —— 五步准入（能力门**先于**流量门）+ 合规 + 看板 | P11 |
 
-> 主 skill 持有四份共享底稿（术语 canon、阶段流水线、方法论账本、两条贯穿案例），保证 6 个子 skill 引用同一套口径。细节走渐进式披露，下沉到 `sigma-agent-engineering/reference/`。
+## 核心方法论（4 个锚）
 
-## 核心方法论（4 个不可简化的锚）
-
-1. **`R ≈ pⁿ`（主线）** — 真实写法是条件概率连乘 `R = ∏ pᵢ`；`pⁿ` 只是建立直觉的乐观基线，真实衰减因 self-conditioning 更陡。
-2. **两速控制系统** — 快内环（执行/驾驭工程，压方差）+ 慢外环（DMAIC/改进，固化永久门禁）+ 中间独立测量总线耦合。
-3. **三手段** — 抬高单步可靠度 base p / 缩短步数 N / 给失败兜底封顶 ⊓（Safety-I + Safety-II）。
-4. **正交轴 II（信任与遏制）** — 对付提示词注入/越权的独立轴，不是 `pⁿ` 随机误差；核心是别让一个 Agent 同时握私有数据 + 读不可信内容 + 对外发送（**致命三联**）。
+1. **`R ≈ pⁿ`** —— 真实写法是条件概率连乘 `R = ∏ pᵢ`；`pⁿ` 只是乐观基线。
+2. **两速控制** —— 快环压方差、慢环把失败固化成门禁、测量总线耦合两环。
+3. **三手段** —— 抬高 base `p` · 缩短 `N` · 兜底封顶 `⊓`（Safety-I + Safety-II）。
+4. **正交轴 II · 信任与遏制** —— 对付对抗性的独立轴，**不是** `pⁿ` 随机误差。别让一个 Agent 同时握私有数据 **+** 读不可信内容 **+** 对外发送（**致命三联**）。
 
 ## 安装
-
-把这 7 个目录复制到你的 Claude Code skills 目录：
 
 ```bash
 git clone https://github.com/lssmi/sigma-agent-engineering-suite.git
@@ -47,26 +73,29 @@ cp -R sigma-agent-engineering-suite/sigma-agent-engineering \
       ~/.claude/skills/
 ```
 
-之后在 Claude Code 里提到「企业 Agent 工程化 / 数字员工 / 从立项到生产 / Sigma Engineering / R≈pⁿ」等即可触发主编排器；它会按任务本性路由到对应子 skill，或直接放行轻量任务（不强制走全程）。
+之后在 Claude Code 里提到「企业 Agent 工程化 / 数字员工 / 从立项到生产 / Sigma Engineering / R≈pⁿ」等即可触发主编排器。
 
-## 示例
+## 看它跑起来
 
-`sigma-agent-engineering/examples/` 含两个**过程可视化**演示与一次 QFD×跨模型对抗评审走查：
+[`sigma-agent-engineering/examples/`](./sigma-agent-engineering/examples/) 里有两个**过程可视化**走查：
 
-- `8d-run.html` — 制造业 8D 诊断 Agent 沿 P0–P11 走一圈的过程图
-- `qfd-walkthrough.html` — 用 QFD 设计「数字质量工程师 Agent」的四阶段 AB 角互换评审
-- `qfd-digital-qe-agent/` — 上述走查的逐阶段产物与 Codex 评审记录
+**制造业 8D 诊断 Agent 沿 P0–P11 走一圈**（[`8d-run.html`](./sigma-agent-engineering/examples/8d-run.html)）
 
-> ⚠️ **所有示例数据均为模拟/示例值**，用于演示流水线机制与门禁，非真实生产数据。
+![8D 诊断 Agent 运行过程](./assets/example-8d.png)
+
+**用 QFD + 跨模型对抗评审 设计「数字质量工程师 Agent」**（[`qfd-walkthrough.html`](./sigma-agent-engineering/examples/qfd-walkthrough.html)）
+
+![QFD 跨模型评审走查](./assets/example-qfd.png)
+
+> ⚠️ 所有示例数据均为**模拟/示例值** —— 用于演示流水线机制与门禁，非真实生产数据。
 
 ## 来源、授权与边界
 
-- **方法论来源**：本套件的方法论提炼自专著《企业 AI Agent：从聊天框到数字员工》(范玉辉, Sigma Engineering 范式)。作者作为权利人，将本 **skill 实现**以 MIT 协议开源。
-- **授权边界**：MIT 协议覆盖本仓的 **skill 代码与结构**（SKILL.md / reference 编排 / 示例）。书面专著正文本身的著作权另行保留——本套件是方法论的工程化落地，不是书的全文复制。
-- **作者本地核验源**：仓内多处提到「八审清样 `/tmp/book8/`」是作者本机的书稿底稿，**未随本仓发布、外部用户也无需访问**。需要核对数值/章节时，以仓内 `reference/` 各文件已核验台账 + 正式出版书为准。
-- **非官方关联**：本项目是面向 Claude Code 的第三方 skill 套件，与 Anthropic 无隶属关系。
-- **免责**：方法论与示例仅供工程参考，不构成对任何具体生产系统可靠性、合规性或安全性的保证；落地请结合自身环境验证。
+- **方法论来源**：提炼自专著《企业 AI Agent：从聊天框到数字员工》(**John Fan**，即 范玉辉 / Fan Yuhui，Sigma Engineering 范式)。作者作为权利人，将本 **skill 实现**以 MIT 协议开源。
+- **授权边界**：MIT 覆盖本仓的 **skill 代码与结构**（SKILL.md / reference 编排 / 示例）。书面专著正文本身的著作权另行保留 —— 本套件是方法论的工程化落地，不是书的全文复制。
+- **作者本地核验源**：仓内提到的「八审清样 `/tmp/book8/`」是作者本机书稿底稿，**未随仓发布、也无需访问**。核对数值/章节以仓内 `reference/` 已核验台账 + 正式出版书为准。
+- **非官方关联**：第三方 Claude Code skill 套件，与 Anthropic 无隶属关系。**免责**：方法论与示例仅供工程参考，不构成对任何具体生产系统可靠性/合规性/安全性的保证，落地请结合自身环境验证。
 
 ## License
 
-[MIT](./LICENSE) © 2026 范玉辉 (Fan Yuhui)
+[MIT](./LICENSE) © 2026 John Fan · x@ainewmeth

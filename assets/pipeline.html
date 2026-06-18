@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 760px; }
+  body {
+    font-family: "Helvetica Neue", "Inter", Arial, sans-serif;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(15,23,42,.05) 1px, transparent 0) 0 0 / 24px 24px,
+      linear-gradient(135deg, #fcfbf8 0%, #f1efe7 100%);
+    color: #16191d;
+    padding: 38px 56px 30px;
+    display: flex; flex-direction: column;
+  }
+  .kicker { font-size: 13px; letter-spacing: .32em; font-weight: 700; color: #0f766e; text-transform: uppercase; }
+  h2 { font-size: 33px; font-weight: 800; letter-spacing: -.02em; margin-top: 7px; }
+  h2 .mono { font-family: ui-monospace, Menlo, monospace; color: #0f766e; }
+  .loops { display: flex; gap: 18px; margin-top: 22px; flex: 1; }
+  .flywheel { width: 92px; position: relative; display: flex; align-items: center; justify-content: center; }
+  .flywheel .bar { position: absolute; right: 8px; top: 14px; bottom: 14px; width: 3px;
+    background: repeating-linear-gradient(#b45309 0 9px, transparent 9px 16px); border-radius: 3px; }
+  .flywheel .up { position: absolute; right: 1px; top: 6px; color: #b45309; font-size: 20px; line-height: 1; }
+  .flywheel .lbl { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 13px; font-weight: 700;
+    color: #b45309; letter-spacing: .04em; white-space: nowrap; }
+  .stack { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+  .p0 { background: #1f2937; color: #fff; border-radius: 13px; padding: 15px 22px;
+    display: flex; align-items: center; gap: 16px; }
+  .p0 .code { font-family: ui-monospace, Menlo, monospace; font-weight: 700; font-size: 19px; color: #93c5a9; }
+  .p0 .t { font-size: 19px; font-weight: 700; }
+  .p0 .d { font-size: 14px; color: #b8c0cc; margin-left: auto; }
+  .lane { border-radius: 14px; padding: 15px 18px 17px; position: relative; }
+  .lane.fast { background: rgba(15,118,110,.08); border: 1.5px solid rgba(15,118,110,.28); }
+  .lane.slow { background: rgba(180,83,9,.08); border: 1.5px solid rgba(180,83,9,.30); }
+  .lane .head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+  .lane .badge { font-size: 12px; font-weight: 800; letter-spacing: .14em; padding: 3px 10px; border-radius: 6px; color: #fff; }
+  .lane.fast .badge { background: #0f766e; }
+  .lane.slow .badge { background: #b45309; }
+  .lane .desc { font-size: 14.5px; color: #475569; }
+  .lane .desc b { color: #1f2937; }
+  .chips { display: flex; gap: 11px; }
+  .chip { background: #fff; border-radius: 10px; padding: 11px 13px; flex: 1;
+    border: 1px solid #e3e0d6; box-shadow: 0 1px 2px rgba(15,23,42,.05); }
+  .chip .c { font-family: ui-monospace, Menlo, monospace; font-weight: 700; font-size: 14px; }
+  .lane.fast .chip .c { color: #0f766e; }
+  .lane.slow .chip .c { color: #b45309; }
+  .chip .n { font-size: 14px; font-weight: 600; margin-top: 3px; color: #1f2937; line-height: 1.25; }
+  .chip .s { font-size: 12px; color: #6b7280; margin-top: 3px; }
+  .bus { background: #0f172a; color: #fff; border-radius: 12px; padding: 12px 22px;
+    display: flex; align-items: center; gap: 14px; box-shadow: 0 3px 12px rgba(15,23,42,.18); }
+  .bus .code { font-family: ui-monospace, Menlo, monospace; font-weight: 700; font-size: 16px; color: #5eead4; }
+  .bus .t { font-size: 16px; font-weight: 700; }
+  .bus .d { font-size: 13.5px; color: #aab4c4; margin-left: auto; }
+  .bus .arrows { color: #5eead4; font-size: 15px; letter-spacing: 2px; }
+  .cap { margin-top: 20px; font-size: 16px; color: #475569; line-height: 1.45; border-left: 3px solid #b45309; padding-left: 14px; }
+  .cap b { color: #1f2937; }
+</style>
+</head>
+<body>
+  <div class="kicker">How it works</div>
+  <h2>The two-speed control system &nbsp;·&nbsp; <span class="mono">R = ∏ pᵢ</span></h2>
+
+  <div class="loops">
+    <div class="flywheel">
+      <div class="bar"></div><div class="up">▲</div>
+      <div class="lbl">case-law flywheel · Control → Define</div>
+    </div>
+    <div class="stack">
+      <div class="p0">
+        <span class="code">P0</span><span class="t">Intake &amp; triage</span>
+        <span class="d">feasibility · R≈∏pᵢ baseline · set control gear &amp; bottleneck</span>
+      </div>
+
+      <div class="lane fast">
+        <div class="head">
+          <span class="badge">FAST INNER LOOP · P1–P6</span>
+          <span class="desc">execution / harness engineering — <b>crush variance, gate every step</b> (no learning)</span>
+        </div>
+        <div class="chips">
+          <div class="chip"><div class="c">P1</div><div class="n">Control plane</div><div class="s">3-layer isolation</div></div>
+          <div class="chip"><div class="c">P2</div><div class="n">MCP access</div><div class="s">clean inputs only</div></div>
+          <div class="chip"><div class="c">P3</div><div class="n">Code sandbox</div><div class="s">compute → code</div></div>
+          <div class="chip"><div class="c">P4</div><div class="n">Orchestration</div><div class="s">DAG / state machine</div></div>
+          <div class="chip"><div class="c">P5</div><div class="n">CDOC capability</div><div class="s">design quality in</div></div>
+          <div class="chip"><div class="c">P6</div><div class="n">Guardrails ×3</div><div class="s">Safety-I/II + gates</div></div>
+        </div>
+      </div>
+
+      <div class="bus">
+        <span class="arrows">▲</span>
+        <span class="code">P7</span><span class="t">Independent measurement bus</span>
+        <span class="d">the truth source coupling both loops — measured independently of what it measures</span>
+        <span class="arrows">▼</span>
+      </div>
+
+      <div class="lane slow">
+        <div class="head">
+          <span class="badge">SLOW OUTER LOOP · P8–P11</span>
+          <span class="desc">DMAIC / improvement — <b>freeze real failures into permanent gates</b></span>
+        </div>
+        <div class="chips">
+          <div class="chip"><div class="c">P8</div><div class="n">Observability</div><div class="s">constraint · error budget</div></div>
+          <div class="chip"><div class="c">P9</div><div class="n">Eval &amp; cost</div><div class="s">success rate = pⁿ</div></div>
+          <div class="chip"><div class="c">P10</div><div class="n">DMAIC flywheel</div><div class="s">case-law, permanent</div></div>
+          <div class="chip"><div class="c">P11</div><div class="n">Production gate</div><div class="s">capability before traffic</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cap">Most teams wire only the fast loop &rarr; <b>the demo runs, production breaks, and when it breaks there's no way to tell why.</b> Sigma Engineering couples both loops through an independent measurement bus.</div>
+</body>
+</html>

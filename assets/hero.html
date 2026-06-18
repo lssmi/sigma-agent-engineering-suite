@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 440px; }
+  body {
+    font-family: "Helvetica Neue", "Inter", Arial, sans-serif;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(15,23,42,.055) 1px, transparent 0) 0 0 / 24px 24px,
+      linear-gradient(135deg, #fcfbf8 0%, #f1efe7 100%);
+    color: #16191d;
+    position: relative;
+    overflow: hidden;
+    padding: 52px 60px 46px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .accent { position: absolute; left: 0; top: 0; bottom: 0; width: 9px;
+    background: linear-gradient(#0f766e, #115e59); }
+  .kicker { font-size: 14px; letter-spacing: .36em; font-weight: 700; color: #0f766e;
+    text-transform: uppercase; }
+  h1 { font-size: 72px; font-weight: 800; letter-spacing: -.022em; line-height: .98; margin-top: 16px; }
+  .sub { font-size: 22px; color: #3f464d; margin-top: 18px; max-width: 700px; line-height: 1.42; }
+  .formula { position: absolute; right: 60px; top: 86px; text-align: center;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .formula .big { font-size: 60px; font-weight: 700; color: #0f172a; letter-spacing: .01em; }
+  .formula svg { display: block; margin: 14px auto 6px; }
+  .formula .note { font-size: 15.5px; color: #6b7280; line-height: 1.5; }
+  .formula .note b { color: #b45309; }
+  .foot { font-size: 15px; color: #565e66; display: flex; gap: 14px; align-items: center; z-index: 2; }
+  .tag { background: #0f766e; color: #fff; padding: 4px 13px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 700; letter-spacing: .06em; }
+  .dot { color: #b9beb6; }
+</style>
+</head>
+<body>
+  <div class="accent"></div>
+  <div>
+    <div class="kicker">Enterprise AI Agent · Quality Engineering</div>
+    <h1>Sigma Agent<br>Engineering</h1>
+    <div class="sub">From chatbox to digital worker — engineering reliability into LLM agents with the discipline of quality engineering.</div>
+  </div>
+  <div class="formula">
+    <div class="big">R ≈ ∏ p<tspan style="font-size:.6em">ᵢ</tspan></div>
+    <svg width="300" height="62" viewBox="0 0 300 62">
+      <defs></defs>
+      <line x1="6" y1="8" x2="6" y2="56" stroke="#c7ccc4" stroke-width="1.5"/>
+      <line x1="6" y1="56" x2="294" y2="56" stroke="#c7ccc4" stroke-width="1.5"/>
+      <path d="M6,10 C70,12 140,30 294,52" fill="none" stroke="#0f766e" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="6" cy="10" r="4" fill="#0f766e"/>
+      <circle cx="294" cy="52" r="4" fill="#b45309"/>
+      <text x="16" y="22" font-family="ui-monospace,Menlo,monospace" font-size="12" fill="#475569">100%</text>
+      <text x="232" y="48" font-family="ui-monospace,Menlo,monospace" font-size="12" fill="#b45309">36%</text>
+    </svg>
+    <div class="note">step reliability 0.95 × 20 steps<br><b>0.95²⁰ ≈ 0.36</b> — reliability is multiplied, not added</div>
+  </div>
+  <div class="foot">
+    <span class="tag">7-SKILL SUITE</span>
+    <span>Claude Code</span><span class="dot">·</span><span>MIT</span><span class="dot">·</span><span>John Fan · Sigma Engineering</span>
+  </div>
+</body>
+</html>
