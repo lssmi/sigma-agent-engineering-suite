@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QFD × AB 角互换 · 跨模型对抗评审过程</title>
+<style>
+  :root{
+    --bg:#f6f3ec; --surface:#fffdf8; --ink:#23201a; --muted:#6f675a; --line:#e4ddcf;
+    --claude:#2f6f6a; --claude-soft:#dcebe8; --codex:#9a6b1f; --codex-soft:#f1e2c9;
+    --fire:#c0392b; --fire-soft:#f7e0db; --ok:#2f7d4f;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Hiragino Sans GB",system-ui,sans-serif;line-height:1.6}
+  .wrap{max-width:1000px;margin:0 auto;padding:48px 24px 80px}
+  header h1{font-size:29px;margin:0 0 6px;letter-spacing:-.5px}
+  header .sub{color:var(--muted);font-size:15px}
+  .principle{margin:26px 0;padding:16px 20px;background:#fff;border:1px solid var(--line);
+    border-left:4px solid var(--ink);border-radius:0 8px 8px 0;font-size:15px}
+  .principle b{font-size:16px}
+  .who{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;
+    padding:2px 9px;border-radius:20px;font-weight:600}
+  .w-claude{background:var(--claude-soft);color:var(--claude)}
+  .w-codex{background:var(--codex-soft);color:var(--codex)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:20px 0 30px}
+  table.roles{border-collapse:collapse;width:100%;margin:20px 0 34px;font-size:14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  table.roles th,table.roles td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}
+  table.roles th{background:#efe9dd;font-size:13px;color:var(--muted)}
+  table.roles td:first-child{font-weight:600}
+  .step{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;margin:18px 0}
+  .step .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  .step .pid{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--codex)}
+  .step h3{margin:0;font-size:17px}
+  .pipeline{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;font-size:12px;font-family:var(--mono)}
+  .pipeline .seg{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;background:#f3efe5}
+  .arrow{color:var(--muted)}
+  .catch{margin-top:12px;padding:12px 14px;border-radius:8px;background:var(--fire-soft);
+    border:1px solid #e7b9af;font-size:13.5px}
+  .catch b{color:var(--fire)}
+  .catch.minor{background:#f3efe5;border-color:var(--line)}
+  .catch.minor b{color:var(--codex)}
+  .verdict{font-family:var(--mono);font-size:12px;color:var(--ok);margin-top:8px}
+  .sidebar{margin:34px 0;padding:18px 20px;border-radius:10px;background:#fbf4ec;border:1px solid #ecdcc6}
+  .sidebar h4{margin:0 0 8px;color:var(--codex);font-size:15px}
+  .sidebar ul{margin:6px 0 0;padding-left:18px;font-size:13.5px}
+  .sidebar code{font-family:var(--mono);background:#f1e2c9;padding:1px 5px;border-radius:4px}
+  .takeaway{margin:30px 0 0;padding:18px 22px;border-radius:10px;background:var(--claude-soft);border:1px solid #c9dbd5}
+  .takeaway h4{margin:0 0 6px;color:var(--claude);font-size:16px}
+  .takeaway p{margin:0;font-size:14.5px}
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>QFD × AB 角互换 · 跨模型对抗评审过程</h1>
+  <div class="sub">用 QFD 四阶段设计「数字质量工程师 Agent」(8D 诊断) · 客户=质量经理/工程师 · Claude ↔ Codex(gpt-5.5) 角色互换 · <span style="font-style:italic">模拟演练</span></div>
+</header>
+
+<div class="principle">
+  <b>铁律：运动员 ≠ 裁判</b>（生成者 ≠ 评审者，书 ch3/ch18 测量独立性）。<br>
+  每步三角色：<b>提法</b>(定义怎么做) → <b>实现</b>(落地) → <b>评审</b>(挑错)。规矩只有一条：<b>实现一个 artifact 的人，不能审自己那个 artifact</b>——必须由另一方审。
+</div>
+
+<div class="legend">
+  <span class="who w-claude">Claude</span> 本会话主体
+  <span class="who w-codex">Codex</span> 跨模型仲裁 (gpt-5.5 xhigh/low)
+</div>
+
+<table class="roles">
+  <tr><th>QFD 步</th><th>提法</th><th>实现</th><th>评审(裁判)</th></tr>
+  <tr><td>一 · 产品规划 HOQ</td><td><span class="who w-codex">Codex</span></td><td><span class="who w-claude">Claude</span></td><td><span class="who w-codex">Codex</span></td></tr>
+  <tr><td>1.5 · CTQ→8D 过渡矩阵</td><td><span class="who w-claude">Claude</span></td><td><span class="who w-codex">Codex</span></td><td><span class="who w-claude">Claude</span></td></tr>
+  <tr><td>二 · 子系统部署矩阵</td><td><span class="who w-claude">Claude</span></td><td><span class="who w-claude">Claude</span></td><td><span class="who w-codex">Codex</span></td></tr>
+  <tr><td>三 · 过程/控制计划</td><td><span class="who w-claude">Claude</span></td><td><span class="who w-claude">Claude</span></td><td><span class="who w-codex">Codex</span></td></tr>
+</table>
+<p style="font-size:12.5px;color:var(--muted);margin-top:-22px">注：步二/三因 codex CLI「实现」类调用当日不稳，降为 Codex 只做评审；核心规则(实现者≠评审者)始终守住。</p>
+
+<div class="step">
+  <div class="top"><span class="pid">步 一</span><h3>产品规划 HOQ：VOC → Agent 级 CTQ / 工程度量</h3></div>
+  <div class="pipeline"><span class="seg w-codex">提法 Codex</span><span class="arrow">→</span><span class="seg w-claude">实现 Claude</span><span class="arrow">→</span><span class="seg w-codex">评审 Codex</span></div>
+  <p style="font-size:14px;margin:4px 0 0">Codex 定义瀑布(一/1.5/二/三)+ 提法并承诺 10 条评审判据；Claude 实现 10 条 VOC→CTQ + 11 个可测 How + 关系矩阵 + 屋顶 + 竞争评估。</p>
+  <div class="catch"><b>⚑ Codex 逮到 Claude 的真错：</b> HOW-05 单位写 <code style="font-family:var(--mono)">ppm</code> 却定目标 <code style="font-family:var(--mono)">≤3‰</code>(=3000ppm)，单位不自洽；屋顶混入<b>非-How 项</b>(「报告自动化」「专家可编辑性」)，破坏 HOQ 对象一致性。 → 已修。</div>
+  <div class="verdict">verdict: PASS_WITH_FIXES</div>
+</div>
+
+<div class="step">
+  <div class="top"><span class="pid">步 1.5</span><h3>CTQ → 8D 工作情境 / 证据流 过渡矩阵</h3></div>
+  <div class="pipeline"><span class="seg w-claude">提法 Claude</span><span class="arrow">→</span><span class="seg w-codex">实现 Codex</span><span class="arrow">→</span><span class="seg w-claude">评审 Claude</span></div>
+  <p style="font-size:14px;margin:4px 0 0">Claude 提法(把 CTQ 部署到 D0–D8 节点)；<b>Codex 真实现了</b>(矩阵带 ◎/○/△ 逐格因果)；Claude 评审。</p>
+  <div class="catch minor"><b>⚑ Claude 逮到 Codex 的缺口：</b> 漏了「承接 How」列(CTQ→How→8D 可溯链断一节)；§5 给 Phase 二的交接缺 How 量化锚。 → 记录。</div>
+  <div class="verdict">verdict: PASS_WITH_FIXES　|　插曲：Codex 实现被我 alarm 砍早 + 误删，从 <code style="font-family:var(--mono)">~/.codex/sessions</code> rollout 恢复</div>
+</div>
+
+<div class="step">
+  <div class="top"><span class="pid">步 二</span><h3>Agent 能力 / 子系统部署矩阵 (S1–S9)</h3></div>
+  <div class="pipeline"><span class="seg w-claude">提法+实现 Claude</span><span class="arrow">→</span><span class="seg w-codex">评审 Codex</span></div>
+  <p style="font-size:14px;margin:4px 0 0">Claude 实现 9 个子系统 × CTQ 部署矩阵 + 技术重要度 + 承接 How + 权衡 + 优先序。</p>
+  <div class="catch"><b>⚑ Codex 逮到 Claude 的真错(算术)：</b> 技术重要度算错——S3 写 <b>243</b>，逐项 <code style="font-family:var(--mono)">90+81+81+18+8+7=285</code>；S1 写 <b>126</b> 实际 >156。整行重要度不可信。 → 全表重算修正。</div>
+  <div class="verdict">verdict: PASS_WITH_FIXES（DONE@90s，看门狗护航）</div>
+</div>
+
+<div class="step">
+  <div class="top"><span class="pid">步 三</span><h3>过程规划 / 控制计划矩阵</h3></div>
+  <div class="pipeline"><span class="seg w-claude">提法+实现 Claude</span><span class="arrow">→</span><span class="seg w-codex">评审 Codex</span></div>
+  <p style="font-size:14px;margin:4px 0 0">Claude 实现 子系统×(实现/测试/验收门/监控/回退) + 五步准入 + IQC/IPQC/OQC 站位 + 变更治理。</p>
+  <div class="catch"><b>⚑ Codex 逮到 Claude 的真错(结构遗漏)：</b> <b>S4 知识检索层整行漏掉</b>(步二有 S1–S9、步三只填了 8 个)；S2/S8/S9 验收门未量化。 → 补回 S4 + 量化。</div>
+  <div class="verdict">verdict: PASS_WITH_FIXES（DONE@60s）</div>
+</div>
+
+<div class="takeaway">
+  <h4>↯ 效果：四步四个真错，双向都中招</h4>
+  <p>Claude 的<b>算术错(285≠243)</b>、<b>结构遗漏(漏 S4)</b>、<b>单位/对象污染</b>，Codex 的<b>漏列</b>——各自盯不到<b>自己</b>的盲区，跨模型互审一抓一个准。这就是「运动员≠裁判」的硬价值：同源自审(同一个脑袋既写又审)发现不了这些；换一个异构模型来审才行。</p>
+</div>
+
+<div class="sidebar">
+  <h4>🐛 过程中的工程教训：别让 Codex 卡死</h4>
+  <ul>
+    <li><b>进程泄漏</b>：反复 launch+kill 顶层进程，Codex 派生的 node/darwin 子进程没回收，堆到 <code>59 个</code>拖垮连接 = 连接挂死的本地根因。</li>
+    <li><b>看门狗启动器 <code>cdx.sh</code></b>：<code>90s 无 banner → 判连接挂、秒杀</code> / <code>封顶 7min</code> / <code>跑完 pkill reap 子进程</code>。</li>
+    <li><b>实测</b>：连接挂从 15–25min 闷死 → <code>CONNECT_STALL@90s</code> 快杀、残留进程=0；连上的 <code>DONE@60–90s</code>。</li>
+    <li><b>配方</b>：重生成(implement)易中途 stall，<code>low effort</code> 生成快、在 stall 窗口前跑完更易成；<code>-o</code> 可能在 kill 后才落盘(别误判失败)，输出也在 session rollout 可恢复。</li>
+  </ul>
+</div>
+
+<footer>
+  产物存于 <code style="font-family:var(--mono)">examples/qfd-digital-qe-agent/</code>（4 个 phase + 3 份 Codex 评审 + README）· Sigma Engineering 范式 · 模拟演练，数据为示例值。
+</footer>
+</div>
+</body>
+</html>

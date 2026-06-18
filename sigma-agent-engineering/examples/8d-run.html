@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>8D 诊断 Agent · 端到端运行过程</title>
+<style>
+  :root{
+    --bg:#f6f3ec; --surface:#fffdf8; --ink:#23201a; --muted:#6f675a;
+    --line:#e4ddcf; --amber:#b9772a; --amber-soft:#f1e2c9; --teal:#2f6f6a;
+    --fire:#c0392b; --fire-soft:#f7e0db; --ok:#2f7d4f; --slow:#7a5ea8;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Hiragino Sans GB",system-ui,sans-serif;line-height:1.6}
+  .wrap{max-width:980px;margin:0 auto;padding:48px 24px 80px}
+  header h1{font-size:30px;margin:0 0 6px;letter-spacing:-.5px}
+  header .sub{color:var(--muted);font-size:15px}
+  .incident{margin:28px 0;padding:16px 20px;background:var(--fire-soft);
+    border-left:4px solid var(--fire);border-radius:0 8px 8px 0;font-size:15px}
+  .incident b{color:var(--fire)}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;margin:24px 0 8px;font-size:13px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .band{margin:34px 0 14px;display:flex;align-items:center;gap:12px}
+  .band h2{font-size:18px;margin:0}
+  .band .tag{font-family:var(--mono);font-size:12px;padding:2px 10px;border-radius:20px;color:#fff}
+  .fast{background:var(--teal)} .slowb{background:var(--slow)}
+  .band .desc{color:var(--muted);font-size:13px}
+  .flow{position:relative;margin-left:14px;padding-left:30px;border-left:2px solid var(--line)}
+  .step{position:relative;margin:14px 0;background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;padding:14px 16px}
+  .step::before{content:"";position:absolute;left:-37px;top:18px;width:12px;height:12px;
+    border-radius:50%;background:var(--amber);border:2px solid var(--surface)}
+  .step.fire::before{background:var(--fire)}
+  .step .pid{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--amber)}
+  .step.fire .pid{color:var(--fire)}
+  .step h3{margin:2px 0 6px;font-size:16px;display:inline-block}
+  .chip{font-family:var(--mono);font-size:11px;background:var(--amber-soft);color:#8a5a1f;
+    padding:1px 8px;border-radius:10px;margin-left:8px;vertical-align:middle}
+  .step p{margin:6px 0 0;font-size:14px;color:#3c372e}
+  .gate{margin-top:8px;font-size:13px;padding:8px 12px;border-radius:7px;background:#f3efe5}
+  .gate.fired{background:var(--fire-soft);border:1px solid #e7b9af}
+  .gate b{font-family:var(--mono)}
+  .out{margin-top:8px;font-size:13px;color:var(--teal)}
+  .out::before{content:"▸ 交付 ";color:var(--muted)}
+  .catch{margin:26px 0;padding:18px 20px;border-radius:10px;background:#fff;
+    border:1px solid var(--line);border-top:3px solid var(--fire)}
+  .catch h4{margin:0 0 6px;color:var(--fire);font-size:15px}
+  .catch p{margin:0;font-size:14px;color:#3c372e}
+  .flywheel{margin:30px 0;padding:18px 20px;border-radius:10px;background:#f4f0fb;border:1px solid #e2d8f0}
+  .flywheel h4{margin:0 0 6px;color:var(--slow);font-size:15px}
+  .flywheel p{margin:0;font-size:14px}
+  .stats{display:flex;gap:14px;flex-wrap:wrap;margin:34px 0 0}
+  .stat{flex:1;min-width:160px;background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;padding:16px}
+  .stat .n{font-family:var(--mono);font-size:22px;color:var(--amber);font-weight:700}
+  .stat .l{font-size:12px;color:var(--muted);margin-top:4px}
+  footer{margin-top:50px;padding-top:18px;border-top:1px solid var(--line);
+    color:var(--muted);font-size:12px}
+  .note{font-size:12px;color:var(--muted);font-style:italic;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>8D 诊断 Agent · 端到端运行过程</h1>
+  <div class="sub">模拟运行 <code style="font-family:var(--mono)">run_20240617_017</code> · 由 <b>sigma-agent-engineering</b> 编排 · 沿 P0–P11 两速控制流水线 · <span class="note" style="font-style:normal">数据为模拟值</span></div>
+</header>
+
+<div class="incident">
+  <b>工单 #QA-2406-017</b>　A 产线 转子组件 RA-77 外径(OD)尺寸超差，良率三周 98.2% → 94.1% → <b>91.4%</b>。
+  关键特性 OD Ø50.000 ±0.050 mm｜工序 OP-30 外圆精车｜质量经理点「启动 8D」。
+</div>
+
+<div class="legend">
+  <span><span class="dot" style="background:var(--amber)"></span>常规步</span>
+  <span><span class="dot" style="background:var(--fire)"></span>门禁触发 / 关键拦截</span>
+  <span><span class="dot" style="background:var(--teal)"></span>快内环(执行)</span>
+  <span><span class="dot" style="background:var(--slow)"></span>慢外环(改进)</span>
+</div>
+
+<div class="band"><span class="tag fast">快内环 P0–P6</span><h2>建造 / 执行</h2><span class="desc">压方差 · 每步过门禁才放行</span></div>
+<div class="flow">
+
+  <div class="step"><span class="pid">P0</span> <h3>立项分诊 (Define)</h3><span class="chip">enterprise-agent-assessment</span>
+    <p>把诊断拆成九步约二十步链；<b>分诊出口</b>把"算 CpK"判给确定性代码（N≈1，模型不碰）；圈出瓶颈步=⑤⑥交叉比对推根因。</p>
+    <div class="gate">门禁 ✓ 流程就绪度达③档；容差带=制造质量签署 ≤0.1%</div>
+    <div class="out">GO 裁决 + 变差评估(根因步 p≈0.70) + 不可逆动作清单</div></div>
+
+  <div class="step"><span class="pid">P1</span> <h3>三层控制面设计</h3><span class="chip">agent-control-plane-design</span>
+    <p>指令面=8D 报告强制 8 字段 JSON；信息面=动态折叠(三千字算力推理→折成 <code style="font-family:var(--mono)">CpK=0.82,critical</code>)；运行治理面=状态机四步闭环。</p>
+    <div class="gate fired">门禁 ⚡ 触发：模型漏填 <b>D5</b>，Schema 校验当场打回 → 重生成</div>
+    <div class="out">control-plane-spec + 状态锁字典</div></div>
+
+  <div class="step"><span class="pid">P2</span> <h3>外部接入 + 信息洗净</h3><span class="chip">control-plane</span><span class="chip">guardrails</span>
+    <p>MCP 接 MES/ERP/FMEA 三台<b>只读</b>服务器（读写分治）；信用分三维剔除一份过期旧 8D。</p>
+    <div class="gate fired">门禁 ⚡ 根因步输入 p 从 <b>0.70 洗到 0.95</b>（避免第1章「张冠李戴」复现）</div>
+    <div class="out">外部能力地图 + 信息控制面流水线</div></div>
+
+  <div class="step"><span class="pid">P3</span> <h3>代码沙盒（算力归代码）</h3><span class="chip">control-plane</span>
+    <p>CpK 由 Python 算死，模型不生成数值。</p>
+    <div class="gate fired">门禁 ⚡ 沙盒首跑抛 <b>NaN</b>(来料字段缺失) → 自愈 <code style="font-family:var(--mono)">df.dropna()</code> 重跑 → CpK=0.82 可复验（缺失记录另存，留给慢外环）</div>
+    <div class="out">沙盒配置 + 确定步/随机步切分表 + 幂等核查</div></div>
+
+  <div class="step"><span class="pid">P4</span> <h3>多智能体编排（数字科层制）</h3><span class="chip">human-loop</span><span class="chip">control-plane</span>
+    <p>Data / Knowledge / Compliance Agent 物理隔离、读不同库；DAG 焊死流转。</p>
+    <div class="gate fired">门禁 ⚡ 生成者≠审查者：Compliance Agent 用独立源核对，发现 D3 缺失 → 打回（反模式：同模型三遍投票=伪冗余，已避免）</div>
+    <div class="out">科层制拓扑 + 契约 Schema 注册表</div></div>
+
+  <div class="step"><span class="pid">P5</span> <h3>设计期 CDOC 能力门</h3><span class="chip">enterprise-agent-assessment</span>
+    <p>5 条 must-be → CTQ；上线前用<b>历史真值集</b>架能力门。</p>
+    <div class="gate fired">门禁 ⚡ 30 个历史 8D 真值集跑：根因命中率 84% &lt; 红线 90% → <b>CONDITIONAL 不放行</b>，回 P2 加强证据后重测 92% ✓</div>
+    <div class="out">CDOC 四阶段文档 + 分离线判据卡</div></div>
+
+  <div class="step fire"><span class="pid">P6</span> <h3>三道防线护栏</h3><span class="chip">guardrails</span><span class="chip">human-loop</span>
+    <p>① Safety-I：8 个 D 缺一即熔断、外部内容裹 untrusted。② <b>可逆门</b>。③ 组织记忆 ECN 代谢。</p>
+    <div class="gate fired">⚡ <b>可逆门关键时刻</b>：Agent 以 <b>0.97 高置信</b>建议「立即全线停机」——<b>照样挂起</b>等质量经理（人工门按可逆性、与置信度彻底解耦）。经理改判「今晚换班停机」→ 此 diff 成第一粒判例种子。</div>
+    <div class="out">三层护栏清单 + 判例库 Schema</div></div>
+</div>
+
+<div class="band"><span class="tag slowb">慢外环 P7–P11</span><h2>测量 / 改进</h2><span class="desc">中间靠独立测量总线耦合两环</span></div>
+<div class="flow">
+  <div class="step"><span class="pid">P7</span> <h3>独立测量总线 (Measure)</h3><span class="chip">observability-setup</span>
+    <p>量者≠被量者；裁判读独立库找反例；MSA 自标定。</p>
+    <div class="gate fired">门禁 ⚡ 发现「根因方向对不对」从未单独测量、已漂移近三周 → 补独立审查逐份核证据链</div>
+    <div class="out">测量维度清单 + 反例驱动评估集</div></div>
+
+  <div class="step fire"><span class="pid">P8</span> <h3>可观测性 · 约束 · 误差预算</h3><span class="chip">observability-setup</span>
+    <p>沿执行树定位：安静低占用的「交叉比对步」竟独占 <b>71% 首次走偏</b> = 真约束(TOC)。</p>
+    <div class="gate fired">⚡ 量化回报：瓶颈步 <b>p 0.70→0.95</b>，整体 <b>R 0.58→0.78</b>（一步顶六十步）；误差预算定逃逸率 ≤千分之三</div>
+    <div class="out">四象限看板 + 约束定位三步法 + 误差预算表</div></div>
+
+  <div class="step"><span class="pid">P9</span> <h3>评估与成本工程</h3><span class="chip">observability-setup</span>
+    <p>北极星=端到端成功率（不认单步平均/模型自报）；旗舰读数算 CpK 改确定性代码=同时削成本+抬 p。</p>
+    <div class="out">端到端评估方案 + 成本冰山 + 模型路由表</div></div>
+
+  <div class="step"><span class="pid">P10</span> <h3>DMAIC 外环判例飞轮 (Control→Define)</h3><span class="chip">observability-setup</span>
+    <p>见下方「飞轮」——系统真正的回报。</p></div>
+
+  <div class="step"><span class="pid">P11</span> <h3>规模化生产准入</h3><span class="chip">production-gate</span>
+    <p>五步准入(能力门先于流量门)：SOP→沙盒压测→影子运行→灰度→全量观察。</p>
+    <div class="gate fired">门禁 ⚡ <b>影子运行</b>(输出不执行,1–2周)正是这里抓出沙盒不会出现的夜班偏差 → CONDITIONAL，回 P10 固化后转 READY</div>
+    <div class="out">production-readiness-report + 三组看板</div></div>
+</div>
+
+<div class="catch"><h4>⚑ 关键拦截 1 · 静默逃逸被独立审查当场打回</h4>
+  <p>生成者初版贴最高 RPN → 「根因=刀具磨损，建议换刀」(置信 0.86)。审查者读<b>独立数据源</b>反驳：刀具寿命内(520/800件)、OD 漂移与「件数」弱相关、与「来料批次切换日」<b>强相关</b> → REJECT 打回。裸模型会把"换刀"当结论交付——这是第3章「静默逃逸」被挡下的一刻。</p></div>
+
+<div class="catch"><h4>⚑ 关键拦截 2 · 不可逆动作按可逆性挂人工（与置信度解耦）</h4>
+  <p>冻结物料 / 发召回函 = 不可逆 → 即便 Agent 报 0.97 高置信，<b>照样挂人工</b>；刀补 +0.015 = 可逆 → 放行。「能撤放手做、不能撤先问，高置信但撤不回照样先问」。</p></div>
+
+<div class="flywheel"><h4>↻ 慢外环咬合 · 三周后的判例飞轮（系统真正的回报）</h4>
+  <p>看板报警：<b>夜班</b>根因返工率系统性高于日班(跳出控制带,非噪声) → DMAIC 一圈：真因不在模型、在<b>第③步取数：夜班来料批次字段经常为空</b>（正是 P3 被 dropna 掉的那 14 条！）→ Improve 加约 50 行「来料批次完整性」前置校验 → <b>Control 固化成永久门禁 + 进下一版 CTQ 红线</b>。同一类失败再也过不来。</p></div>
+
+<div class="stats">
+  <div class="stat"><div class="n">0.95²⁰≈0.36</div><div class="l">R≈pⁿ 主线：20 步 × 95% 整体仅约三分之一</div></div>
+  <div class="stat"><div class="n">0.58 → 0.78</div><div class="l">瓶颈步硬化 p 0.70→0.95 后整体可靠度跃升</div></div>
+  <div class="stat"><div class="n">4 处</div><div class="l">门禁/独立审查真在干活：D5打回·静默逃逸·可逆门·飞轮固化</div></div>
+</div>
+
+<footer>
+  Sigma Engineering（范玉辉《企业 AI Agent：从聊天框到数字员工》）· 制造业 8D 贯穿案例（附录 G.1）· 本页为模拟运行的过程可视化，非真实生产数据。
+</footer>
+</div>
+</body>
+</html>
