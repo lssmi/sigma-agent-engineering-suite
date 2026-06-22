@@ -63,6 +63,37 @@ description: "Use when designing security guardrails, permission models, memory 
 
 > 注："VDA / 德国汽车工业协会" 不是本表13-4的来源（非书内归属）。书中 VDA 出现在第5章，指的是德国 VDA 把"双重控制 + 可回溯审计追踪"写进质量管理硬性要求这一合规趋势（见书5章脚注[5]），与此处 A/B/C 输出分级不是同一回事，不要把 A/B/C 分级冠以 "VDA风险分级" 之名。
 
+### 数值引用门（Numeric-Citation Gate）— LLM 改写确定性结果时的输出护栏
+
+> **本节定位**：这是输出层护栏的一个**可落地 named pattern**，补 Schema 校验 / PII 过滤之外的一个洞——「数字本身被悄悄改掉」。容差、白名单、伪码均为**本地实现建议（非书内数值）**，请按环境校准；方法论锚点是书第13章 OQC 输出校验 + 第18章「测量必须独立于被测对象」。
+
+**适用判据**：当系统是「确定性引擎 / 检索**先算出**结果，再让 LLM 把结果改写成自然语言解释」时启用（统计平台、报表叙述、Agentic RAG 引文、财务 / 医疗数值解读）。这类系统里 LLM 有改写或编造已算定数值直达用户的风险——如 `Cpk 1.33 → "≈1.3"` 重舍入漂移、编造"过程能力 9.99"。Schema 管结构、PII 管敏感串，都管不住数字漂移。
+
+**核心立场**：`oracle = 引擎真算的产物，不是另一个 LLM`（**Generator ≠ Critic**——把书第18章独立测量精神落到快内环输出层；用第二个 LLM 当裁判 = 自证预言）。
+
+六个机械点：
+
+1. **权威值集构造**：解释允许引用的数字 = 结构化字段（KPI 值、表格单元）∪ 引擎自撰文本里的数字（engine_summary / verdict / warnings）∪ 引擎规则模板输出的数字 ∪ 方法论常数白名单。LLM 段落里每个数字必须落在此集合内，否则该段判违规。
+2. **判等带容差**：相对 + 绝对容差（本地建议 rel `1e-6` / abs `1e-9`）。抓 `1.33→1.3` 重舍入漂移，放过 `1.330 vs 1.33` 纯格式差异。
+3. **小数严格 / 裸小整数白名单**：多位小数统计量（Cpk / p 值 / F / PPM / 均值）严格门控；方法论常数与裸小整数（0–10、20…100、6σ、α=0.05、80/20）白名单放行（它们在引擎模板里本就出现、自动并入权威集）；中文数字小数形（"七点七七"→7.77）也要覆盖。
+4. **fail-soft 铁律**：违规段落**不报错中断**，而是逐段回退到引擎规则文本（按 name 匹配 → 按位置 → 兜底 engine_summary）。宁可"少说"也不让错数字过门。
+5. **诚实标签**：meta 透出 `verified / rejected / 回退` 状态，产品表面显式标注"引擎结论·规则生成"或"已过数值核对门 / 部分回退"，不让模板冒充模型洞察。
+6. **对抗测试 oracle = 真值非自证预言**：测试集喂「编造 / 漂移 / 干净引用 / 多精度 / 常数白名单 / 大整数编造 / 真能力包络集成」，断言用引擎真算的包络值，不用另一个 LLM 评判。
+
+```pseudo
+authoritative = domain_constants ∪ structured_numbers(env) ∪ nums(engine_rule_sections(env))
+for sec in llm_sections:
+    bad = [n for n in nums_in(sec.body) if not within_tol(n, authoritative)]
+    out.append(sec if not bad else engine_section_for(sec.name))   # fail-soft 回退
+report.any_rejected = any(bad over all sections)
+```
+
+> **已知盲区（必须诚实标注，门不是万能的）**：① 裸小整数被白名单放行 → 含 PPM / 计数类的整数漂移（如 `63→7`）会漏；② 幻觉值恰好撞上权威集中某真算小数 / 常数时会漏。真实的小数漂移 / 编造已被严格门控，上述为可接受残留，**下游不得假设"裸整数也被守住"**。
+>
+> **门控-流式粒度匹配（named pattern·通用，不止本门）**：凡输出护栏需「看到**完整语义单元**才能判定」（数值引用核验 / Schema 校验 / 结论方向一致性），就与「逐字 token 流式尽早吐字」天然冲突——逐字流式下护栏要么看不全（漏判）、要么缓冲到整篇（等于不流式）。解法＝选一个**模型可独立产出、护栏可独立判定**的中间粒度单元（通常 section / object）：每单元完整后过门、过门即推，缺单元由 completeness 兜底补引擎文本。本门即取 section 级（`tablygo` llm_adapter.py 实测 4 段逐段过门到达）。
+>
+> **本地实证锚点（dogfooding）**：`tablygo` 统计平台真造了这道门（`server/engine/critic.py`：权威集构造 / 中文数字 / fail-soft 回退 / 7 个对抗测试 oracle=envelope 真值），section 级流式实测 4 段逐段过门到达。引用文件名为**本地实例、非本套件 skill**。
+
 ---
 
 ## 二、权限模型矩阵（书13.4，IPQC 运行时护栏·表13-3）

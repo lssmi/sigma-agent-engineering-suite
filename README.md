@@ -32,7 +32,7 @@ Most teams wire up the execution loop, ship a demo that works on stage… and th
 ![The two-speed control pipeline](./assets/pipeline.png)
 
 - **Fast inner loop (P1–P6)** — execution / *harness engineering*. Crush variance, gate every step. No learning, no reflection — just pass-or-stop.
-- **Slow outer loop (P8–P11)** — DMAIC improvement. Turn every real failure into a *permanent* gate, so the same bug can never ship twice.
+- **Slow outer loop (P7–P11)** — improvement + scale-up: **P7–P10 DMAIC** (turn every real failure into a *permanent* gate, so the same bug can never ship twice) + **P11 production-readiness gate** (admission, not a DMAIC step).
 - **Independent measurement bus (P7)** — the truth source that couples both loops, measured *independently* of what it measures (no self-fulfilling tests).
 - **Case-law flywheel** — `Control → Define`: every fix becomes an asset the system carries forward.
 

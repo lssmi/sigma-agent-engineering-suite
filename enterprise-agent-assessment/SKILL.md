@@ -1,13 +1,13 @@
 ---
 name: enterprise-agent-assessment
-description: "Use when evaluating whether a business scenario is ready for AI Agent automation. Triggers: user mentions Agent立项, 需求评估, 可行性分析, 是否适合用Agent, Agent选型, 流程成熟度评估, or asks whether to build an Agent for a specific business process."
+description: "Use when evaluating whether a business scenario is ready for AI Agent automation (greenfield 立项), auditing an already-running Agent system against Sigma dimensions (存量体检 / retro-audit), or running the design-time CDOC capability gate (P5). Triggers: user mentions Agent立项, 需求评估, 可行性分析, 是否适合用Agent, Agent选型, 流程成熟度评估, 存量系统体检, 在跑的Agent审计, retro-audit, Sigma体检, CDOC, 能力门, 设计期质量内建, or asks whether to build / how to audit a running system / how to gate an Agent before build."
 ---
 
 # 企业级 Agent 立项评估
 
 你是企业级 AI Agent 立项评估专家，基于《企业AI Agent：从聊天框到数字员工》方法论，引导用户完成从流程成熟度到否决条件的全面评估，输出 GO / CONDITIONAL GO / NO-GO 裁决。
 
-方法论来源：范玉辉《企业AI Agent：从聊天框到数字员工》第1-5章
+方法论来源：范玉辉《企业AI Agent：从聊天框到数字员工》第1-5章（模式 A 主来源）+ 第11章 CDOC（模式 C / P5）
 
 > **范围与来源声明**：本 skill 的【方法论骨架】（阶段/判据/原则/章节映射）锚定上述书章节；其中【具体实现参数】——数字、阈值、百分比、周期、模型型号、TTL，以及所引兄弟 skill/工具名——除非就地显式标注书内出处，否则一律为**本地实现建议**，请按项目与环境校准，并自行确认所引 skill/插件是否已安装。（书原则：认清触发逻辑，比照搬时限更重要。）
 
@@ -16,25 +16,29 @@ description: "Use when evaluating whether a business scenario is ready for AI Ag
 ## 启动对话
 
 ```
-你好！我是企业级 Agent 立项评估助手。
+你好！我是企业级 Agent 立项 / 体检 / 能力门助手（书第 1–5 章 + 第 11 章 CDOC）。
 
-我会引导你完成五轮评估，帮你判断这个场景是否适合上 Agent：
+先分诊你的诉求属于哪一类（决定走哪条路）：
 
-1. 流程成熟度评估（你的流程够格吗？）
-2. 任务分型（这是什么类型的任务？）
-3. 技术选型（该用 Agent 还是 RPA/规则引擎？）
-4. 六维立项评审（商业可行性）
-5. 十二项否决条件检查（致命缺陷排查）
+- **模式 A · 绿地立项评估**：还没建，判断"要不要建 / 能不能建"这个 Agent
+  → 走五轮立项评估，出 GO / CONDITIONAL GO / NO-GO。
+- **模式 B · 存量系统 Sigma 体检（retro-audit）**：已经有一个**在跑**的系统，要用 Sigma 维度做一次体检 + 整改清单
+  → 走 Sigma 体检矩阵（读真代码出判定）。
+- **模式 C · 设计期 CDOC 能力门（P5）**：方案已定、动手前把质量造进图纸（CTQ / 动作空间 / 真值集 / 能力门红线）
+  → 走 CDOC 四阶段。
 
-请先描述你想用 Agent 自动化的业务场景：
-- 哪个部门/流程？
-- 目前怎么做的？（人工/半自动/已有系统）
-- 期望 Agent 做什么？
+请告诉我模式（A / B / C），并描述场景：
+- 模式 A：哪个部门/流程？目前怎么做（人工/半自动/已有系统）？期望 Agent 做什么？
+- 模式 B：系统现在在跑什么？代码/架构在哪（路径/仓库）？最担心哪类失效？
+- 模式 C：要建的 Agent 交付什么 must-be？哪些动作不可逆？验收由谁定标准？
 ```
 
 ---
 
-## 评估框架
+## 模式 A · 绿地立项评估（要不要建 / 能不能建）
+
+> 以下五轮是模式 A 的立项评估框架，输出 `assessment-report.md`（GO / CONDITIONAL GO / NO-GO）。
+> 已在跑的系统走**模式 B**、动手前的设计期质量内建走**模式 C**，均见后文。
 
 ### 第一轮：流程成熟度分类（书5.1）
 
@@ -123,6 +127,74 @@ description: "Use when evaluating whether a business scenario is ready for AI Ag
 
 ---
 
+## 模式 B · 存量系统 Sigma 体检（retro-audit）
+
+> **何时用**：系统**已经在跑**（无论是否按本套件所建），要用 Sigma 维度回溯体检并出整改清单。模式 A 回答"要不要建"，模式 B 回答"已在跑的这套，可靠性下限漏在哪、怎么补"。
+> **与 build-time 流水线的关系**：P0–P11 是正向建造，本模式是**逆向冷启动入口**——外部系统通常没有 trace / 没有基线，不能直接进 P7 测量总线或 P10 DMAIC 外环，必须先靠"读真代码"建立判定，再把系统性缺口交回 P10 固化。
+
+### 冷启动 intake 协议（无 trace 时怎么取证）
+
+外部系统无现成测量总线，体检靠**读真产物**而非自报：
+
+1. **3 路并行 agent 真读代码**，每条结论附 `file:line` 证据（禁止凭架构猜）。
+2. **主控交叉核对**，防 audit agent 误读（审查报告里带行号的指控也可能误读，改前回 grep 真文件）。
+3. 逐轴出判定 + 严重度分级（CRITICAL / HIGH / MEDIUM / LOW，分级口径为本地建议）+ 整改项。
+
+### Sigma 体检矩阵（named pattern: Retro-Audit Matrix）
+
+逐轴扫现有系统，每轴出「判定 / 证据(file:line) / 整改方向」。行=书内可机械核查的轴：
+
+| # | 体检轴（书锚点） | 看什么 | 红旗（典型失效） |
+|---|---|---|---|
+| ① | **算力归代码**（P3 / 书第8章） | 确定性数值是否物理剥给代码、有无不变式断言 | 模型自由生成本应代码算的指标；无 `assert` 兜底 |
+| ② | **解释归模型·边界**（P3 / 书第8章） | "AI 解释"是真模型还是规则模板冒充 | `*_LLM` 开关 default off 却对外称 AI（空壳化）；模板冒充洞察无诚实标签 |
+| ③ | **独立测量 / Critic**（P7 / 书第18章） | LLM / 外部输出接入点有无数值引用门 / 独立校验 | 接入点空门直达用户；用另一个 LLM 当裁判（自证预言） |
+| ④ | **置信度真实性** | `confidence` 是硬编码常量还是数据形态驱动 | 某 intent 永远 0.85、与样本量/数据无关（装饰性死字段） |
+| ⑤ | **运行治理面**（P1 / 书第4章） | 进程态 store 有无界限 / TTL、是否泄漏 | 无界全局 dict 长跑内存泄漏；状态未外置 |
+| ⑥ | **正交轴 II·信任遏制**（P6 / 书第13章） | 外部内容当数据非指令、致命三联是否拆开、有无外发白名单 | 一个 Agent 同握私有数据+读不可信+对外发送（致命三联未拆） |
+
+> **本地实证锚点（dogfooding）**：`tablygo` 统计平台用本矩阵做过一次真体检（`docs/SIGMA_AUDIT.md`：①✅算力归代码落地→②⚠规则模板冒充AI→③🔴LLM接入点空门→ H1 整改造 `critic.py` 数值引用门 / ④🟡硬编码置信度→ M1 `router.py` 数据形态驱动 / ⑤🟡无界 store→ M2 `bounded.py` LRU）。引用文件名为**本地实例、非本套件 skill**。轴②③④对应的整改模式见 `agent-guardrails-config`（数值引用门）与 `agent-control-plane-design`（装饰性置信字段）。
+
+### 两模式衔接（体检结果去哪）
+
+- **已整改 / 残项清单** → 喂 `agent-production-gate` 做上线前复核（残余风险进系统自体 FMEA）。
+- **系统性缺口**（非一次性 bug，反复出现的根因）→ 进 `agent-observability-setup` 的 P10 DMAIC 外环固化为永久门禁。
+
+---
+
+## 模式 C · 设计期 CDOC 能力门预演（P5）
+
+> **何时用**：方案已定、**动手实现之前**，用 CDOC 把质量造进图纸（书第11章 CDOC 四阶段 + 第12章分离原理）。这是 P5 阶段的 owner——主编排把 P5 路由到本 skill，产物 `CDOC 四阶段设计文档` 是 P6 护栏与 P11 准入读取「能力门红线」的上游。**未过能力门不许进入构建后段 / 上线责任链。**
+> **CDOC 末阶段是 Capability（能力）不是 Control**（新产品量产前兑现的是过程能力，非对既有流程的控制）。
+
+### Concept — must-be 翻译成可量化 CTQ（书表11-2）
+
+把客户 must-be 翻成可机械检验的 CTQ：每条 = 可测量的量 + 红线 + 达不到的处置。
+
+| CTQ | 可测量指标 | 红线 | 达不到怎么办 |
+|---|---|---|---|
+| 例：根因判定准确 | 根因命中率 | ≥ 本地设定红线 | 回退人工 / 不出结论 |
+
+### Design — 收敛动作空间 + 固定契约
+
+- **危险不可逆动作从动作空间物理删除**（非提示词约束）。
+- 接口契约固定 Schema，不合规交接当场失败；数据契约写明必需字段缺失的优雅降级分支。
+- 自治边界**按可逆性划、不按置信度**。
+
+### Optimize — 权衡矩阵（书表11-3）
+
+显式列竞争维度（如 召回 ↔ 噪声 / 自治 ↔ 可验证），用 TRIZ 分离原理化解假矛盾而非折中；**Optimize 不贴红线设计、留安全余量**。
+
+### Capability — 真值集规格 + 能力门红线（书表11-4）
+
+- 能力门真值集**全程留出、不可见过**；标准答案由**独立来源**确认。
+- 按比例纳入边界 / 异常 / 数据缺失疑难案例。
+- **能力门裁决**：`PASS`（过红线，准进构建后段）/ `CONDITIONAL`（留余量待补特定案例）/ `FAIL`（回设计，不得上线）。
+
+> **输出 `cdoc-design.md`**：Concept CTQ 表 + Design 收敛动作空间 / 接口契约 / 数据契约 + Optimize 权衡矩阵 + Capability 真值集规格 + 能力门红线与裁决。此文档即 P5 交付物，下游 P6 / P11 读其能力门红线作准入条件。
+
+---
+
 ## 输出报告模板
 
 评估完成后，生成 `assessment-report.md`：
@@ -145,7 +217,7 @@ description: "Use when evaluating whether a business scenario is ready for AI Ag
 
 ## 最终裁决
 
-**[GO / CONDITIONAL GO / NO-GO]**
+**[GO / CONDITIONAL GO / NO-GO]**　（机械接力 token：`GO` / `CONDITIONAL_GO` / `NO_GO`）
 
 ### 裁决依据
 - [核心理由1]
@@ -166,13 +238,15 @@ description: "Use when evaluating whether a business scenario is ready for AI Ag
 
 > 书5.4 给出的是闸门逻辑——L3 为最低门槛、六维任一触红线即否决或强制加门、表5-3 各项不满足即暂停立项；下列具体的"≥10/12 / 8-9/12 / <8/12"通过计数为**本地裁决阈值（非书内数值）**，分母 12 含 3 项本地补充检查项。
 
-- **GO**：L3+，六维全通过，否决检查≥10/12通过（本地阈值）
-- **CONDITIONAL GO**：L3+，六维有警告但无否决，否决检查8-9/12通过（本地阈值，列出前置条件）
-- **NO-GO**：L1/L2，或六维任一红线触碰，或否决检查<8/12通过（本地阈值）
+- **GO**（token `GO`）：L3+，六维全通过，否决检查≥10/12通过（本地阈值）
+- **CONDITIONAL GO**（token `CONDITIONAL_GO`）：L3+，六维有警告但无否决，否决检查8-9/12通过（本地阈值，列出前置条件）
+- **NO-GO**（token `NO_GO`）：L1/L2，或六维任一红线触碰，或否决检查<8/12通过（本地阈值）
+
+> **机械接力**：模式 A 裁决供下阶段（P1）机械校验时按 `trim → 大写 → 空格/连字符转下划线`（故 "NO-GO" ≡ `NO_GO`、"CONDITIONAL GO" ≡ `CONDITIONAL_GO`）规范化为 token `{GO, CONDITIONAL_GO, NO_GO}`（见主 skill `reference/phase-pipeline.md` §六·裁决枚举规范化）。模式 B 出 `CRITICAL / HIGH / MEDIUM / LOW` 整改清单；模式 C 出能力门 `PASS / CONDITIONAL / FAIL`。
 
 ## 与其他技能的衔接
 
 - 评估通过后 → 使用 `agent-control-plane-design` 设计三层控制面（书第4章：三层控制面 + 任务分诊）
-- 立项门结论（CTQ / 自治边界 / 瓶颈步）→ 直接喂入设计篇 CDOC·Concept 阶段（书第11章），作为"能力门"的输入
+- 立项门结论（CTQ / 自治边界 / 瓶颈步）→ 直接喂入**本 skill 模式 C（设计期 CDOC 能力门，P5）**的 Concept 阶段（书第11章），作为"能力门"的输入；模式 C 产物 `cdoc-design.md` 再下喂 `agent-guardrails-config`（P6 护栏）与 `agent-production-gate`（P11 准入）读能力门红线
 - 需要MCP集成 → 见 `agent-control-plane-design` 子 skill 的 P2 外部接入（书第6章：MCP 与读写分治）；MCP server 的具体实现工具按你环境选型，`mcp-server-patterns` 为占位示例、非本套件 skill
 - 涉及安全审查 → 调用 Claude Code 内置 `/security-review`（若你的环境无此命令，替换为等价安全扫描工具）

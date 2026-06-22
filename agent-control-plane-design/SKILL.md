@@ -90,6 +90,16 @@ description: "Use when designing the three-layer control plane architecture for 
 - 当不确定时，将confidence设为<阈值>并设requires_approval=true
   - 口径提醒（书4.4 / 书4.6）：**不可逆动作的人工门必须与置信度解耦**——凡撤不回的动作（资金、订单流转、产线停机、对外召回等），无论 confidence 多高一律挂人工；confidence 阈值只用于触发"补证据/复核"，不能替代按可逆性钉死的人工门。
 
+### 装饰性置信字段反模式（Decorative Confidence Field）
+
+> **named pattern·本地工程经验（阈值非书内）**：上面 Schema 留了 `confidence` 字段（B3 防错的一部分），但**留了字段 ≠ 字段有信息**。一个常见生产侧死字段：emitter 回填一个**与样本量 / 数据形态无关的硬编码常量**（如某意图永远 `0.85`），看似量化把握度、实则零信息，下游据此分诊 / 排序会被误导。
+
+- **判别法**：grep emitter 回写 `confidence` 的代码点，该值若**不读** 样本量 n / 数据覆盖 / 列数 / 前提检验结果，即为死字段。
+- **修法·数据形态驱动校准**：`confidence` 必须由可观测数据条件派生——按 n 爬升（样本越少越低）、按数据完整度 / 口径覆盖 / 连续列数等形态因子调整，线性映射 + 上下钳位（如 `CONF_MIN` / `CONF_MAX`，本地建议 0.3 / 0.97）。
+- **诚实 docstring 契约**：写明 `confidence = 数据形态适配度，不是结果可靠度`。结果可靠度由各步**前提检验**（正态 / 方差齐性 / 独立性 / 容差带）保证、不靠这个字段；与上面"人工门与置信度解耦"一致——`confidence` 既不决定人工门，也不冒充质量证据（书第18章：模型自评几乎不能作质量证据）。
+
+> **本地实证锚点（dogfooding）**：`tablygo` 曾踩此坑——`server/engine/router.py` 的 confidence 原为硬编码常量（hypothesis 永远 0.85），整改成数据形态驱动（capability 随 n 从 0.6→0.85、spc 随子组、correlation/regression 随连续列数）+ 诚实 docstring。引用为**本地实例、非本套件 skill**。
+
 ---
 
 ## 第二层：信息控制面（书4.3）

@@ -57,7 +57,8 @@
 
 ### E.3　家族 C —— 越用越好（慢外环 DMAIC）
 
-> 路由：→ `agent-observability-setup`（C1/C2 测量与独立量具）+ `agent-production-gate`（C3/C4/C5/C6 DMAIC 外环·判例飞轮·验证经济学）
+> 路由：→ `agent-observability-setup`（C1/C2 测量与独立量具 + C3/C4/C5/C6 DMAIC 外环·判例飞轮·验证经济学，对应 P7–P10）。
+> 注：**C 家族（C1-C6）全程归 `agent-observability-setup`**（与 `reference/phase-pipeline.md` P7–P10 测量/分析/改进/判例飞轮路由一致）；`agent-production-gate` 承接的是慢外环**终点的 P11 规模化生产准入 gate**（DMAIC 判例飞轮之后的规模化落地，仍属慢外环、但不是 C3-C6 的 DMAIC 改进循环）——勿把 C 家族改进工作错交给生产准入 skill。
 
 | 核心做法 | 方法论出处 | 对应工具 / 内核 | 正文位置 |
 |---|---|---|---|

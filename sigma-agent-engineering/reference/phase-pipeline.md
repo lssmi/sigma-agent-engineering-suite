@@ -64,7 +64,7 @@
 ## 二、十二阶段流水线（P0–P11）
 
 主 skill 用 R≈pⁿ 主线把流程焊成一条**两速控制流水线**：快内环（P1–P6，驾驭工程/执行）
-+ 慢外环（P7–P11，DMAIC/改进），中间靠**独立测量总线**（P7）耦合。每阶段给出：
++ 慢外环（P7–P11，改进 + 规模化准入：**DMAIC 判例飞轮 P7–P10**、**生产准入终点 gate P11**），中间靠**独立测量总线**（P7）耦合。每阶段给出：
 goal / 对应八审章节（真实章号，**非子 skill 漂移声明**）/ 路由子 skill（或内联）/
 内联方法 / 进入&退出门禁 / 交付物。
 
@@ -122,7 +122,7 @@ goal / 对应八审章节（真实章号，**非子 skill 漂移声明**）/ 路
   不可信外部内容隔进数据区；状态外置 JSON 锁字典；权限白名单；季度护栏审计（触发率为零 /
   误报率过高标"待评审"防护栏膨胀）。
 - **交付物**：`control-plane-spec.md`（指令面 Schema 契约 + 信息面可见性矩阵与折叠规则 +
-  运行治理面状态字典模板与审批网关）+ 任务分诊漏斗判据表 + CDOC 四阶段设计文档（Concept 的
+  运行治理面状态字典模板与审批网关）+ 任务分诊漏斗判据表 + CDOC 四阶段设计文档**初稿**（最终定稿归 **P5 模式 C**·owner=`enterprise-agent-assessment`；P1 仅出上游初稿，含 Concept 的
   CTQ 表 / Design 动作空间收敛 / Optimize 权衡矩阵 / Capability 能力门红线）。
 
 ---
@@ -408,11 +408,13 @@ goal / 对应八审章节（真实章号，**非子 skill 漂移声明**）/ 路
 
 | 阶段产物 | 最小必备字段 | 下阶段消费校验 |
 |---|---|---|
-| P0 assessment-report | verdict∈{GO,COND,NO-GO}·作业链N·不可逆动作清单·瓶颈步·容差带 | P1 读控制档位/不可逆清单；非 GO 不进 P1 |
+| P0 assessment-report | verdict∈{GO,CONDITIONAL_GO,NO_GO}·作业链N·不可逆动作清单·瓶颈步·容差带 | P1 读控制档位/不可逆清单；非 GO 不进 P1 |
 | P1 control-plane-spec | 指令面Schema·信息面可见性矩阵·状态锁字典·分诊档位 | P2–P4 按状态锁字典推进；缺锁项不放行 |
 | P5 CDOC 文档 | CTQ表(可测+红线)·动作空间收敛·**能力门真值集+红线** | P6/P11 读能力门红线作准入条件 |
 | P6 护栏配置 | 三层护栏·风险分级A/B/C·**不可逆动作→可逆门清单**·判例库Schema | P7+ 读判例库Schema；可逆门清单进 P11 |
 | P7 测量规范 | 测量维度(Y)·独立审查机制·反例评估集·trace规范 | P8–P10 以此为唯一计分依据；非独立测量不采信 |
-| P11 准入报告 | READY/COND/BLOCKED·五步门结果·三组看板指标 | 收口；BLOCKED 不上线 |
+| P11 准入报告 | verdict∈{READY,CONDITIONAL,BLOCKED}·五步门结果·三组看板指标 | 收口；BLOCKED 不上线 |
 
 > 把书第 4 章「指令面=API 契约、缺字段不放行」用到主 skill 自身的阶段接力上——阶段间是**机械契约校验**，不是"看名字接"。
+>
+> **裁决枚举规范化（机械校验口径）—— [v2 修复 BUG-枚举漂移]**：子 skill 报告里的人类可读裁决（如 P0 的 "CONDITIONAL GO"、P11 的 "CONDITIONAL"）在机械校验前先规范化为 token——`trim → 大写 → 空格/连字符转下划线`，故人类可读的 "CONDITIONAL GO" ≡ 契约 token `CONDITIONAL_GO`（消除 `COND` 缩写歧义）。两套裁决枚举**不可混用**：P0 立项门出 `{GO, CONDITIONAL_GO, NO_GO}`（owner=`enterprise-agent-assessment`），P11 准入门出 `{READY, CONDITIONAL, BLOCKED}`（owner=`agent-production-gate`）；下阶段按本规范化口径做相等校验，不靠字面串直接比对。子 skill 报告正文可保留中文友好裁决（如"CONDITIONAL GO"），但须在裁决处括注规范 token 供机械接力。
